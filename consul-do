@@ -1,0 +1,122 @@
+#!/usr/bin/env python
+import urllib2, json, base64, sys, time
+
+def url_put_json(url, data):
+  opener = urllib2.build_opener(urllib2.HTTPHandler)
+  request = urllib2.Request(url, data)
+  request.add_header('Content-Type', 'application/json')
+  request.get_method = lambda: 'PUT'
+  return opener.open(request).read()
+
+class ConsulDo:
+
+  RUN = 0
+  SKIP = 1
+
+  KV_FOUND = 0
+  KV_MISSING = 1
+  KV_ERROR = 2
+
+  def __init__(self):
+    self.key = ""
+    self.node = ""
+    self.base_url = "http://localhost:8500"
+    self.session = ""
+    self.session_node = ""
+    self.debug = False
+
+  def log(self, message):
+    if self.debug:
+      print message
+
+  def get_store(self):
+    url = "%s/v1/kv/service/%s/leader" % (self.base_url, self.key)
+    try:
+      response = urllib2.urlopen(url).read()
+    except urllib2.HTTPError, e:
+      if e.code == 404:
+        return self.KV_MISSING
+      else:
+        return self.KV_ERROR
+    except Exception as e:
+      self.log("Could not get datastore: %s" % str(e))
+      return self.KV_ERROR
+    else:
+      data = json.loads(response)
+      if "Session" in data[0]:
+        self.session = data[0]["Session"]
+      if "Value" in data[0]:
+        self.session_node = json.loads(base64.b64decode(data[0]["Value"]))["node"]
+      return self.KV_FOUND
+
+  def create_session(self):
+    url = "%s/v1/session/create" % self.base_url
+    try:
+      self.log("Creating session")
+      response = url_put_json(url, None)
+    except Exception as e:
+      self.log("Could not create session: %s" % str(e))
+      sys.exit(self.SKIP)
+    else:
+      session_id = json.loads(response)["ID"]
+      self.log("Setting session id to %s" % session_id)
+      self.session = session_id
+
+  def acquire_session(self):
+    url = "%s/v1/kv/service/%s/leader?acquire=%s" % (self.base_url, self.key, self.session)
+    try:
+      self.log("Acquiring session")
+      response = url_put_json(url, json.dumps({'node': self.node, 'updated': time.time()}))
+    except Exception as e:
+      self.log("Could not acquire session: %s" % str(e))
+      sys.exit(self.SKIP)
+    else:
+      if response == "true":
+        self.log("Got the session!")
+        sys.exit(self.RUN)
+      else:
+        self.log("Couldn't get the session")
+        sys.exit(self.SKIP)
+
+
+  def become_leader(self):
+    self.log("Trying to become leader")
+    self.create_session()
+    self.acquire_session()
+
+
+  def run(self):
+    self.log("Running...")
+    r = self.get_store()
+    if r == self.KV_FOUND:
+      self.log("Found KV store")
+      if self.session != "":
+        self.log("Found session: %s" % self.session)
+        if self.session_node == self.node:
+          self.log("Found session node, we're the leader")
+          sys.exit(self.RUN)
+        else:
+          self.log("Found session node, we're not the leader")
+          sys.exit(self.SKIP)
+      else:
+        self.log("No session found")
+        self.become_leader()
+    elif r == self.KV_MISSING:
+      self.log("No KV entry found")
+      self.become_leader()
+    else:
+      self.log("Could not read KV store")
+      sys.exit(self.SKIP)
+
+
+if __name__ == '__main__':
+  c = ConsulDo()
+  if len(sys.argv) < 3:
+    print "Usage: consul-do KEY NODE [DEBUG]"
+    sys.exit(1)
+
+  c.key = sys.argv[1]
+  c.node = sys.argv[2]
+  if len(sys.argv) >= 4:
+    c.debug = True
+  c.run()
