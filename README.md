@@ -16,8 +16,6 @@ Usage
     $ consul-do
     Usage: consul-do KEY NODE [DEBUG]
 
-To use a consul ACL, export CONSUL_ACL_TOKEN=<your ACL token> in your environment prior to running the command.
-
 Useful for running cronjobs in HA mode.
 
 Run something like this on two or more servers:
@@ -35,6 +33,11 @@ To enable debug mode, add anything as a third argument. E.g.
     Found session: e32c055d-c6ed-e277-45ad-079ba218bb01
     Found session node, we're the leader
     ....
+
+If you require a consul ACL
+
+    $ CONSUL_ACL_TOKEN="mynicelongacltoken" consul-do ... 
+
 
 Testing
 =======
