@@ -16,7 +16,7 @@ Usage
     $ consul-do
     Usage: consul-do KEY NODE [DEBUG]
 
-    To use an ACL, export CONSUL_ACL_TOKEN=<your ACL token>
+    To use a consul ACL, export CONSUL_ACL_TOKEN=<your ACL token> in your environment prior to running the command.
 
 Useful for running cronjobs in HA mode.
 
