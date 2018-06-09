@@ -34,6 +34,11 @@ To enable debug mode, add anything as a third argument. E.g.
     Found session node, we're the leader
     ....
 
+If you require a consul ACL
+
+    $ CONSUL_ACL_TOKEN="mynicelongacltoken" consul-do ... 
+
+
 Testing
 =======
 

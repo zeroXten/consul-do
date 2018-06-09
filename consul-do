@@ -1,10 +1,20 @@
 #!/usr/bin/env python
-import urllib2, json, base64, sys, time
+import urllib2, json, base64, os, sys, time
+
+def has_consul_token():
+  return "CONSUL_ACL_TOKEN" in os.environ
+
+def get_consul_token():
+  return os.environ.get('CONSUL_ACL_TOKEN')
 
 def url_put_json(url, data):
   opener = urllib2.build_opener(urllib2.HTTPHandler)
   request = urllib2.Request(url, data)
   request.add_header('Content-Type', 'application/json')
+
+  if has_consul_token():
+    request.add_header('X-Consul-Token', get_consul_token())
+
   request.get_method = lambda: 'PUT'
   return opener.open(request).read()
 
@@ -32,7 +42,12 @@ class ConsulDo:
   def get_store(self):
     url = "%s/v1/kv/service/%s/leader" % (self.base_url, self.key)
     try:
-      response = urllib2.urlopen(url).read()
+      if has_consul_token():
+        headers = {'X-Consul-Token': get_consul_token()}
+        req = urllib2.Request(url, None, headers)
+        response = urllib2.urlopen(req).read()
+      else:
+        response = urllib2.urlopen(url).read()
     except urllib2.HTTPError, e:
       if e.code == 404:
         return self.KV_MISSING
