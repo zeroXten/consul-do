@@ -2,10 +2,10 @@
 import urllib2, json, base64, os, sys, time
 
 def has_consul_token():
-  return "CONSUL_ACL_TOKEN" in os.environ
+  return "CONSUL_HTTP_TOKEN" in os.environ
 
 def get_consul_token():
-  return os.environ.get('CONSUL_ACL_TOKEN')
+  return os.environ.get('CONSUL_HTTP_TOKEN')
 
 def url_put_json(url, data):
   opener = urllib2.build_opener(urllib2.HTTPHandler)

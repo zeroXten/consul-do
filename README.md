@@ -36,7 +36,7 @@ To enable debug mode, add anything as a third argument. E.g.
 
 If you require a consul ACL
 
-    $ CONSUL_ACL_TOKEN="mynicelongacltoken" consul-do ... 
+    $ CONSUL_HTTP_TOKEN="mytoken" consul-do ... 
 
 
 Testing
