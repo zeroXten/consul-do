@@ -14,21 +14,22 @@ Usage
 =====
 
     $ consul-do
-    Usage: consul-do KEY NODE [DEBUG]
+    Usage: consul-do KEY [DEBUG]
 
 Useful for running cronjobs in HA mode.
 
 Run something like this on two or more servers:
 
-    * * * * * /usr/bin/consul-do JOB-1 $(/bin/hostname) && /path/to/job1
-    */10 * * * * /usr/bin/consul-do JOB-2 $(/bin/hostname) && /path/to/job2
+    *    * * * * /usr/bin/consul-do JOB-1 && /path/to/job1
+    */10 * * * * /usr/bin/consul-do JOB-2 && /path/to/job2
 
 Only one of the servers will be elected leader and will therefore run the job. Should the leader fail, a follower will take over.
 
-To enable debug mode, add anything as a third argument. E.g.
+To enable debug mode, add anything as a second argument. E.g.
 
-    $ consul-do JOB-1 $(hostname) debug
+    $ consul-do JOB-1 debug
     Running...
+    Found nodename: test.internal
     Found KV store
     Found session: e32c055d-c6ed-e277-45ad-079ba218bb01
     Found session node, we're the leader
@@ -52,6 +53,4 @@ Run the following on each respective server
 
 Now you can run a command on each server
 
-    $ while true; do /vagrant/consul-do testing $(hostname) && date; sleep 10; done
-
-
+    $ while true; do /vagrant/consul-do testing && date; sleep 10; done

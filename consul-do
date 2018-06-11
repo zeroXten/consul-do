@@ -40,6 +40,15 @@ class ConsulDo:
     if self.debug:
       print message
 
+  def get_node_name(self):
+    url = "%s/v1/agent/self" % self.base_url
+    request = urllib2.Request(url)
+    if has_consul_token():
+      request.add_header('X-Consul-Token', get_consul_token())
+    response = urllib2.urlopen(request).read()
+    data = json.loads(response)
+    return data['Config']['NodeName']
+
   def get_store(self):
     url = "%s/v1/kv/service/%s/leader" % (self.base_url, self.key)
     try:
@@ -109,6 +118,9 @@ class ConsulDo:
 
   def run(self):
     self.log("Running...")
+    self.node = self.get_node_name()
+    self.log("Found nodename: %s" % self.node)
+
     r = self.get_store()
     if r == self.KV_FOUND:
       self.log("Found KV store")
@@ -118,7 +130,7 @@ class ConsulDo:
           self.log("Found session node, we're the leader")
           sys.exit(self.RUN)
         else:
-          self.log("Found session node, we're not the leader")
+          self.log("Found session node, but %s is the leader" % self.session_node)
           sys.exit(self.SKIP)
       else:
         self.log("No session found")
@@ -133,12 +145,12 @@ class ConsulDo:
 
 if __name__ == '__main__':
   c = ConsulDo()
-  if len(sys.argv) < 3:
+  if len(sys.argv) < 2:
     print "Usage: consul-do KEY NODE [DEBUG]"
     sys.exit(1)
 
   c.key = sys.argv[1]
-  c.node = sys.argv[2]
-  if len(sys.argv) >= 4:
+
+  if len(sys.argv) >= 3:
     c.debug = True
   c.run()
