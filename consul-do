@@ -34,6 +34,7 @@ class ConsulDo:
     self.session = ""
     self.session_node = ""
     self.debug = False
+    self.session_parms = {}
 
   def log(self, message):
     if self.debug:
@@ -68,7 +69,13 @@ class ConsulDo:
     url = "%s/v1/session/create" % self.base_url
     try:
       self.log("Creating session")
-      response = url_put_json(url, None)
+      self.session_parms['LockDelay'] = '30s'
+      self.session_parms['Behavior'] = 'release' # default
+### if a session TTL is warranted, this is where it belongs. 
+### I am not convinced this is a 'good' thing.  I believe it
+### will possibly break the intention of the distributed lock.
+#      self.session_parms['TTL'] = '30s' 
+      response = url_put_json(url, json.dumps(self.session_parms))
     except Exception as e:
       self.log("Could not create session: %s" % str(e))
       sys.exit(self.SKIP)
