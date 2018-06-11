@@ -8,7 +8,9 @@ See https://consul.io
 Installation
 ============
 
-It's just a python script with no additional modules. Download it and stick it somewhere.
+It's just a python script with no additional modules. Download it and stick it somewhere.  
+
+*NOTE* A consul agent is required to be installed where you run this script.
 
 Usage
 =====
