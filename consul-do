@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-import urllib2, json, base64, os, sys, time
+
+import urllib.request, urllib.error, urllib.parse, json, base64, os, sys, time
 
 def has_consul_token():
   return "CONSUL_HTTP_TOKEN" in os.environ
@@ -8,8 +9,8 @@ def get_consul_token():
   return os.environ.get('CONSUL_HTTP_TOKEN')
 
 def url_put_json(url, data):
-  opener = urllib2.build_opener(urllib2.HTTPHandler)
-  request = urllib2.Request(url, data)
+  opener = urllib.request.build_opener(urllib.request.HTTPHandler)
+  request = urllib.request.Request(url, data.encode('utf-8'))
   request.add_header('Content-Type', 'application/json')
 
   if has_consul_token():
@@ -38,14 +39,14 @@ class ConsulDo:
 
   def log(self, message):
     if self.debug:
-      print message
+      print(message)
 
   def get_node_name(self):
     url = "%s/v1/agent/self" % self.base_url
-    request = urllib2.Request(url)
+    request = urllib.request.Request(url)
     if has_consul_token():
       request.add_header('X-Consul-Token', get_consul_token())
-    response = urllib2.urlopen(request).read()
+    response = urllib.request.urlopen(request).read()
     data = json.loads(response)
     return data['Config']['NodeName']
 
@@ -54,11 +55,11 @@ class ConsulDo:
     try:
       if has_consul_token():
         headers = {'X-Consul-Token': get_consul_token()}
-        req = urllib2.Request(url, None, headers)
-        response = urllib2.urlopen(req).read()
+        req = urllib.request.Request(url, None, headers)
+        response = urllib.request.urlopen(req).read()
       else:
-        response = urllib2.urlopen(url).read()
-    except urllib2.HTTPError, e:
+        response = urllib.request.urlopen(url).read()
+    except urllib.error.HTTPError as e:
       if e.code == 404:
         return self.KV_MISSING
       else:
@@ -146,7 +147,7 @@ class ConsulDo:
 if __name__ == '__main__':
   c = ConsulDo()
   if len(sys.argv) < 2:
-    print "Usage: consul-do KEY NODE [DEBUG]"
+    print("Usage: consul-do KEY NODE [DEBUG]")
     sys.exit(1)
 
   c.key = sys.argv[1]
