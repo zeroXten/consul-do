@@ -17,7 +17,8 @@ def url_put_json(url, data):
     request.add_header('X-Consul-Token', get_consul_token())
 
   request.get_method = lambda: 'PUT'
-  return opener.open(request).read()
+  response = opener.open(request).read().decode('utf-8')
+  return response
 
 class ConsulDo:
 
